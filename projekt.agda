@@ -1,4 +1,6 @@
 open import Relation.Binary
+open import Data.Nat using (ℕ; zero; suc) renaming (_<_ to _<ℕ_)
+open import Data.Nat.Properties using () renaming (<-isStrictTotalOrder to <ℕ-isStrictTotalOrder)
 open import Relation.Binary.PropositionalEquality
 open import Level using (0ℓ)
 
@@ -66,3 +68,36 @@ orderedInfinity record { S = S₀ ; _<_ = _<₀_ ; strictTotalOrder = strictTota
     ... | tri≈ ¬a b ¬c = tri≈ (λ x → ¬a (set∞-< x)) (cong (λ x → [ x ]) b) λ x → ¬c (set∞-< x)
     ... | tri> ¬a ¬b c = tri> (λ x → ¬a (set∞-< x)) (λ x → ¬b (set∞-≡ x)) (m<n c)
   
+-- Define type for 2-3 trees.
+data 2-3Tree (A : OrderedSet) : ℕ → (OrderedSet.S (orderedInfinity A)) → (OrderedSet.S (orderedInfinity A)) → Set where
+  Empty : (min max : (OrderedSet.S (orderedInfinity A))) → 2-3Tree A 0 min max
+  -- TODO we need proof that maxl < a and a < minr
+  2Node : {h : ℕ} {minₗ maxₗ minᵣ maxᵣ : (OrderedSet.S (orderedInfinity A))} 
+        → (a : OrderedSet.S A)
+        → 2-3Tree A h minₗ maxₗ → 2-3Tree A h minᵣ maxᵣ → 2-3Tree A (suc h) minₗ maxᵣ
+  -- TODO proofs maxl < a < min
+  3Node : {h : ℕ} {minₗ maxₗ minₘ maxₘ minᵣ maxᵣ : (OrderedSet.S (orderedInfinity A))} 
+        → (a b : OrderedSet.S A)
+        → 2-3Tree A h minₗ maxₗ → 2-3Tree A h minₘ maxₘ → 2-3Tree A h minᵣ maxᵣ → 2-3Tree A (suc h) minₗ maxᵣ
+
+-- EXAMPLE:
+-- Natural number are ordered set
+orderedℕ : OrderedSet
+orderedℕ = record { 
+  S = ℕ ; 
+  _<_ = _<ℕ_ ; 
+  strictTotalOrder = <ℕ-isStrictTotalOrder 
+  }
+
+orderedℕ∞ = OrderedSet.S (orderedInfinity orderedℕ)
+
+-- Example 2-3 tree.
+sampleTree : 2-3Tree orderedℕ 2  -∞ +∞
+sampleTree = 2Node 5 
+                (2Node 3
+                  (Empty -∞ [ 3 ])
+                  (Empty [ 3 ] [ 5 ]))
+                (3Node 7 10
+                  (Empty [ 5 ] [ 7 ])
+                  (Empty [ 7 ] [ 10 ])
+                  (Empty [ 10 ] +∞))
