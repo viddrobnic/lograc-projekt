@@ -1,7 +1,7 @@
 open import Relation.Binary
 open import Data.Nat using (ℕ; zero; suc) renaming (_≤_ to _≤ℕ_)
 open import Data.Sum
-open import Data.Nat.Properties using () renaming (<-isStrictTotalOrder to <ℕ-isStrictTotalOrder)
+open import Data.Nat.Properties using () renaming (≤-isTotalOrder to ≤ℕ-isTotalOrder)
 open import Relation.Binary.PropositionalEquality
 open import Level using (0ℓ)
 
@@ -57,7 +57,7 @@ orderedInfinity record { S = S₀ ; _≤_ = _≤₀_ ; totalOrder = totalOrder�
 
     reflAux : _≡_ ⇒ _≤∞_
     reflAux { -∞} refl = -∞≤n
-    reflAux {[ a ]} refl = m≤n {! (reflexive₀ ( a ≡ a )) !}
+    reflAux {[ a ]} refl = m≤n (reflexive₀ refl)
     reflAux {+∞} refl = n≤+∞
     
     transAux : Transitive _≤∞_
@@ -68,12 +68,19 @@ orderedInfinity record { S = S₀ ; _≤_ = _≤₀_ ; totalOrder = totalOrder�
       (IsPartialOrder.isPreorder
         (IsTotalOrder.isPartialOrder totalOrder₀)) x y)
 
+    antisymAux : Antisymmetric _≡_ (λ z z₁ → z ≤∞ z₁)
+    antisymAux -∞≤n -∞≤n = refl
+    antisymAux n≤+∞ n≤+∞ = refl
+    antisymAux (m≤n x) (m≤n y) = cong
+      (λ u → [ u ])
+      (IsPartialOrder.antisym (IsTotalOrder.isPartialOrder totalOrder₀) x y)
+
     isPartialOrderAux = record {
       isPreorder = record {
         isEquivalence = isEquivalence ;
         reflexive = reflAux ;
         trans = transAux } ;
-      antisym = {!   !} }
+      antisym = antisymAux }
     
     -- -- helper lemma: inserting in Set∞ preserves <
     -- set∞-< : {n m : S₀} → [ n ] ≤∞ [ m ] → n ≤₀ m
@@ -98,26 +105,26 @@ orderedInfinity record { S = S₀ ; _≤_ = _≤₀_ ; totalOrder = totalOrder�
     -- ... | tri> ¬a ¬b c = tri> (λ x → ¬a (set∞-< x)) (λ x → ¬b (set∞-≡ x)) (m≤n c)
   
 -- Define type for 2-3 trees.
--- data 2-3Tree (A : OrderedSet) : ℕ → (OrderedSet.S (orderedInfinity A)) → (OrderedSet.S (orderedInfinity A)) → Set where
---   Empty : (min max : (OrderedSet.S (orderedInfinity A)))
---         → (OrderedSet._≤_ (orderedInfinity A)) min max
---         → 2-3Tree A 0 min max
---   -- 2Node: Node with a single value and two children.
---   2Node : {h : ℕ} {minₗ maxₗ minᵣ maxᵣ : (OrderedSet.S (orderedInfinity A))} 
---         → (a : OrderedSet.S A)
---         → 2-3Tree A h minₗ maxₗ → 2-3Tree A h minᵣ maxᵣ
---         → (OrderedSet._≤_ (orderedInfinity A)) maxₗ [ a ]
---         → (OrderedSet._≤_ (orderedInfinity A)) [ a ] minᵣ
---         → 2-3Tree A (suc h) minₗ maxᵣ
---   -- 3Node: Node with two values and three children.
---   3Node : {h : ℕ} {minₗ maxₗ minₘ maxₘ minᵣ maxᵣ : (OrderedSet.S (orderedInfinity A))} 
---         → (a b : OrderedSet.S A)
---         → 2-3Tree A h minₗ maxₗ → 2-3Tree A h minₘ maxₘ → 2-3Tree A h minᵣ maxᵣ
---         → (OrderedSet._≤_ (orderedInfinity A)) maxₗ [ a ]
---         → (OrderedSet._≤_ (orderedInfinity A)) [ a ] minₘ
---         → (OrderedSet._≤_ (orderedInfinity A)) maxₘ [ b ]
---         → (OrderedSet._≤_ (orderedInfinity A)) [ b ] minᵣ
---         → 2-3Tree A (suc h) minₗ maxᵣ
+data 2-3Tree (A : OrderedSet) : ℕ → (OrderedSet.S (orderedInfinity A)) → (OrderedSet.S (orderedInfinity A)) → Set where
+  Empty : (min max : (OrderedSet.S (orderedInfinity A)))
+        → (OrderedSet._≤_ (orderedInfinity A)) min max
+        → 2-3Tree A 0 min max
+  -- 2Node: Node with a single value and two children.
+  2Node : {h : ℕ} {minₗ maxₗ minᵣ maxᵣ : (OrderedSet.S (orderedInfinity A))} 
+        → (a : OrderedSet.S A)
+        → 2-3Tree A h minₗ maxₗ → 2-3Tree A h minᵣ maxᵣ
+        → (OrderedSet._≤_ (orderedInfinity A)) maxₗ [ a ]
+        → (OrderedSet._≤_ (orderedInfinity A)) [ a ] minᵣ
+        → 2-3Tree A (suc h) minₗ maxᵣ
+  -- 3Node: Node with two values and three children.
+  3Node : {h : ℕ} {minₗ maxₗ minₘ maxₘ minᵣ maxᵣ : (OrderedSet.S (orderedInfinity A))} 
+        → (a b : OrderedSet.S A)
+        → 2-3Tree A h minₗ maxₗ → 2-3Tree A h minₘ maxₘ → 2-3Tree A h minᵣ maxᵣ
+        → (OrderedSet._≤_ (orderedInfinity A)) maxₗ [ a ]
+        → (OrderedSet._≤_ (orderedInfinity A)) [ a ] minₘ
+        → (OrderedSet._≤_ (orderedInfinity A)) maxₘ [ b ]
+        → (OrderedSet._≤_ (orderedInfinity A)) [ b ] minᵣ
+        → 2-3Tree A (suc h) minₗ maxᵣ
 
 -- data _∈_ {A : OrderedSet} {h : ℕ} {min max : (OrderedSet.S (orderedInfinity A))} : 2-3Tree A h min max → Set where
 --   -- here₂ : {l r : 2-3Tree A h} → a ∈ (?) 
@@ -132,30 +139,26 @@ orderedInfinity record { S = S₀ ; _≤_ = _≤₀_ ; totalOrder = totalOrder�
 
 -- EXAMPLE:
 -- Natural number are ordered set
--- orderedℕ : OrderedSet
--- orderedℕ = record { 
---   S = ℕ ; 
---   _≤_ = _≤ℕ_ ; 
---   strictTotalOrder = {!   !}
---   }
+orderedℕ : OrderedSet
+orderedℕ = record { 
+  S = ℕ ; 
+  _≤_ = _≤ℕ_ ; 
+  totalOrder = ≤ℕ-isTotalOrder }
 
--- orderedℕ∞ = OrderedSet.S (orderedInfinity orderedℕ)
+orderedℕ∞ = OrderedSet.S (orderedInfinity orderedℕ)
 
--- -- Empty
--- emptyTree1 : 2-3Tree orderedℕ 0 -∞ +∞
--- emptyTree1 = Empty< -∞ +∞ -∞≤+∞
+-- Empty
+emptyTree : 2-3Tree orderedℕ 0 -∞ +∞
+emptyTree = Empty -∞ +∞ -∞≤n
 
--- emptyTree2 : 2-3Tree orderedℕ 0 [ 5 ] [ 5 ]
--- emptyTree2 = Empty≡ [ 5 ] [ 5 ] refl 
-
--- -- Example 2-3 tree.
--- sampleTree : 2-3Tree orderedℕ 1  -∞ +∞
--- sampleTree = 2Node 3
---               (Empty< -∞ [ 2 ] -∞≤
---         n )
---               ((Empty< [ 4 ] +∞ n≤+∞ ))
---               (m≤n (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n))))
---               (m≤n (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n)))))
+-- Example 2-3 tree.
+sampleTree : 2-3Tree orderedℕ 1  -∞ +∞
+sampleTree = 2Node
+  3
+  (Empty -∞ [ 3 ] -∞≤n)
+  (Empty [ 3 ] +∞ n≤+∞)
+  (m≤n (_≤ℕ_.s≤s (_≤ℕ_.s≤s (_≤ℕ_.s≤s _≤ℕ_.z≤n))))
+  (m≤n (_≤ℕ_.s≤s (_≤ℕ_.s≤s (_≤ℕ_.s≤s _≤ℕ_.z≤n))))
 
 -- -- TODO:
 -- -- - not all trees can be defined because of strict inequality
