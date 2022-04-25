@@ -90,16 +90,38 @@ data 2-3Tree (A : OrderedSet) : ℕ → (OrderedSet.S (orderedInfinity A)) → (
         → 2-3Tree A h min [ a ] → 2-3Tree A h [ a ] [ b ] → 2-3Tree A h [ b ] max
         → 2-3Tree A (suc h) min max
 
--- data _∈_ {A : OrderedSet} {h : ℕ} {min max : (OrderedSet.S (orderedInfinity A))} : 2-3Tree A h min max → Set where
---   -- here₂ : {l r : 2-3Tree A h} → a ∈ (?) 
---   here₃-l : {!  {a b : A} → a ∈  !}
---   here₃-r : {!  {a b : A} → b ∈  !}
---   left₂ : {!   !}
---   right₂ : {!   !}
---   left₃ : {!   !}
---   middle₃ : {!   !}
---   right₃ : {!   !}
+data _∈_ {A : OrderedSet} {min max : (OrderedSet.S (orderedInfinity A))} : {h : ℕ} → OrderedSet.S A → 2-3Tree A h min max → Set where
+  here₂ : {h : ℕ} {a : OrderedSet.S A} {l : 2-3Tree A h min [ a ]} {r : 2-3Tree A h [ a ] max} 
+    {p : min <∞ [ a ]} {q : [ a ] <∞ max} 
+    → a ∈ 2Node a p q l r
+  here₃-l : {h : ℕ} {a b : OrderedSet.S A} {l : 2-3Tree A h min [ a ]} {m : 2-3Tree A h [ a ] [ b ]} {r : 2-3Tree A h [ b ] max}
+    {p : min <∞ [ a ]} {q : [ a ] <∞ [ b ]} {s : [ b ] <∞ max}
+    → a ∈ 3Node a b p q s l m r
+  here₃-r : {h : ℕ} {a b : OrderedSet.S A} {l : 2-3Tree A h min [ a ]} {m : 2-3Tree A h [ a ] [ b ]} {r : 2-3Tree A h [ b ] max}
+    {p : min <∞ [ a ]} {q : [ a ] <∞ [ b ]} {s : [ b ] <∞ max}
+    → b ∈ 3Node a b p q s l m r
+  
+  left₂ : {h : ℕ} {a b : OrderedSet.S A} {l : 2-3Tree A h min [ b ]} {r : 2-3Tree A h [ b ] max} 
+    {p : min <∞ [ b ]} {q : [ b ] <∞ max} 
+    → a ∈ l
+    → a ∈ 2Node b p q l r
+  right₂ : {h : ℕ} {a b : OrderedSet.S A} {l : 2-3Tree A h min [ b ]} {r : 2-3Tree A h [ b ] max} 
+    {p : min <∞ [ b ]} {q : [ b ] <∞ max} 
+    → a ∈ r
+    → a ∈ 2Node b p q l r
 
+  left₃ : {h : ℕ} {a b c : OrderedSet.S A} {l : 2-3Tree A h min [ b ]} {m : 2-3Tree A h [ b ] [ c ]} {r : 2-3Tree A h [ c ] max}
+    {p : min <∞ [ b ]} {q : [ b ] <∞ [ c ]} {s : [ c ] <∞ max}
+    → a ∈ l
+    → a ∈ 3Node b c p q s l m r
+  middle₃ : {h : ℕ} {a b c : OrderedSet.S A} {l : 2-3Tree A h min [ b ]} {m : 2-3Tree A h [ b ] [ c ]} {r : 2-3Tree A h [ c ] max}
+    {p : min <∞ [ b ]} {q : [ b ] <∞ [ c ]} {s : [ c ] <∞ max}
+    → a ∈ m
+    → a ∈ 3Node b c p q s l m r
+  right₃ : {h : ℕ} {a b c : OrderedSet.S A} {l : 2-3Tree A h min [ b ]} {m : 2-3Tree A h [ b ] [ c ]} {r : 2-3Tree A h [ c ] max}
+    {p : min <∞ [ b ]} {q : [ b ] <∞ [ c ]} {s : [ c ] <∞ max}
+    → a ∈ r
+    → a ∈ 3Node b c p q s l m r
 
 -- EXAMPLE:
 -- Natural number are ordered set
@@ -137,6 +159,45 @@ sampleTree3 = 2Node 3 -∞<n n<+∞
     (Empty [ 3 ] [ 4 ] (m<n (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n)))))) 
     (Empty [ 4 ] +∞ n<+∞))
 
--- -- TODO:
--- -- - not all trees can be defined because of strict inequality
--- -- - are there better lemmas for proving 10 < 23 ?
+sampleTree4 : 2-3Tree orderedℕ 2 -∞ +∞
+sampleTree4 = 3Node 2 4 -∞<n 
+  (m<n (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n)))) 
+  n<+∞ 
+  (2Node 1 -∞<n 
+    (m<n (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n))) 
+    (Empty -∞ [ 1 ] -∞<n) 
+    (Empty [ 1 ] [ 2 ] (m<n (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n))))) 
+  (2Node 3 
+    (m<n (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n)))) 
+    (m<n (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n))))) 
+    (Empty [ 2 ] [ 3 ] (m<n (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n))))) 
+    (Empty [ 3 ] [ 4 ] (m<n (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n))))))) 
+  (2Node 5 
+    (m<n (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n)))))) 
+    n<+∞ 
+    (Empty [ 4 ] [ 5 ] (m<n (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n))))))) 
+    (Empty [ 5 ] +∞ n<+∞))
+
+1-in-sampleTree : 1 ∈ sampleTree
+1-in-sampleTree = here₂
+
+1-in-sampleTree2 : 1 ∈ sampleTree2
+1-in-sampleTree2 = here₃-l
+
+2-in-sampleTree2 : 2 ∈ sampleTree2
+2-in-sampleTree2 = here₃-r
+
+1-in-sampleTree3 : 1 ∈ sampleTree3
+1-in-sampleTree3 = left₂ here₃-l
+
+4-in-sampleTree3 : 4 ∈ sampleTree3
+4-in-sampleTree3 = right₂ here₂
+
+1-in-sampleTree4 : 1 ∈ sampleTree4
+1-in-sampleTree4 = left₃ here₂
+
+3-in-sampleTree4 : 3 ∈ sampleTree4
+3-in-sampleTree4 = middle₃ here₂
+
+5-in-sampleTree4 : 5 ∈ sampleTree4
+5-in-sampleTree4 = right₃ here₂
