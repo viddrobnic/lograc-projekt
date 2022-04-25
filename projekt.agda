@@ -71,41 +71,34 @@ orderedInfinity record { S = S₀ ; _<_ = _<₀_ ; strictTotalOrder = strictTota
   
 -- Define type for 2-3 trees.
 data 2-3Tree (A : OrderedSet) : ℕ → (OrderedSet.S (orderedInfinity A)) → (OrderedSet.S (orderedInfinity A)) → Set where
-  -- Empty tree has two constructors:
-  -- - Empty tree with different left and right values.
-  -- - Empty tree with same value for left and right boundary.
-  Empty≡ : (min max : (OrderedSet.S (orderedInfinity A)))
-        → min ≡ max
-        → 2-3Tree A 0 min max
-  Empty< : (min max : (OrderedSet.S (orderedInfinity A)))
+  Empty : (min max : (OrderedSet.S (orderedInfinity A)))
         → (OrderedSet._<_ (orderedInfinity A)) min max
         → 2-3Tree A 0 min max
   -- 2Node: Node with a single value and two children.
-  2Node : {h : ℕ} {minₗ maxₗ minᵣ maxᵣ : (OrderedSet.S (orderedInfinity A))} 
+  2Node : {h : ℕ} {min max : (OrderedSet.S (orderedInfinity A))}
         → (a : OrderedSet.S A)
-        → 2-3Tree A h minₗ maxₗ → 2-3Tree A h minᵣ maxᵣ
-        → (OrderedSet._<_ (orderedInfinity A)) maxₗ [ a ]
-        → (OrderedSet._<_ (orderedInfinity A)) [ a ] minᵣ
-        → 2-3Tree A (suc h) minₗ maxᵣ
+        → (OrderedSet._<_ (orderedInfinity A)) min [ a ]
+        → (OrderedSet._<_ (orderedInfinity A)) [ a ] max
+        → 2-3Tree A h min [ a ] → 2-3Tree A h [ a ] max
+        → 2-3Tree A (suc h) min max
   -- 3Node: Node with two values and three children.
-  3Node : {h : ℕ} {minₗ maxₗ minₘ maxₘ minᵣ maxᵣ : (OrderedSet.S (orderedInfinity A))} 
+  3Node : {h : ℕ} {min max : (OrderedSet.S (orderedInfinity A))} 
         → (a b : OrderedSet.S A)
-        → 2-3Tree A h minₗ maxₗ → 2-3Tree A h minₘ maxₘ → 2-3Tree A h minᵣ maxᵣ
-        → (OrderedSet._<_ (orderedInfinity A)) maxₗ [ a ]
-        → (OrderedSet._<_ (orderedInfinity A)) [ a ] minₘ
-        → (OrderedSet._<_ (orderedInfinity A)) maxₘ [ b ]
-        → (OrderedSet._<_ (orderedInfinity A)) [ b ] minᵣ
-        → 2-3Tree A (suc h) minₗ maxᵣ
+        → (OrderedSet._<_ (orderedInfinity A)) min [ a ]
+        → (OrderedSet._<_ (orderedInfinity A)) [ a ] [ b ]
+        → (OrderedSet._<_ (orderedInfinity A)) [ b ] max
+        → 2-3Tree A h min [ a ] → 2-3Tree A h [ a ] [ b ] → 2-3Tree A h [ b ] max
+        → 2-3Tree A (suc h) min max
 
-data _∈_ {A : OrderedSet} {h : ℕ} {min max : (OrderedSet.S (orderedInfinity A))} : 2-3Tree A h min max → Set where
-  -- here₂ : {l r : 2-3Tree A h} → a ∈ (?) 
-  here₃-l : {!  {a b : A} → a ∈  !}
-  here₃-r : {!  {a b : A} → b ∈  !}
-  left₂ : {!   !}
-  right₂ : {!   !}
-  left₃ : {!   !}
-  middle₃ : {!   !}
-  right₃ : {!   !}
+-- data _∈_ {A : OrderedSet} {h : ℕ} {min max : (OrderedSet.S (orderedInfinity A))} : 2-3Tree A h min max → Set where
+--   -- here₂ : {l r : 2-3Tree A h} → a ∈ (?) 
+--   here₃-l : {!  {a b : A} → a ∈  !}
+--   here₃-r : {!  {a b : A} → b ∈  !}
+--   left₂ : {!   !}
+--   right₂ : {!   !}
+--   left₃ : {!   !}
+--   middle₃ : {!   !}
+--   right₃ : {!   !}
 
 
 -- EXAMPLE:
@@ -121,19 +114,29 @@ orderedℕ∞ = OrderedSet.S (orderedInfinity orderedℕ)
 
 -- Empty
 emptyTree1 : 2-3Tree orderedℕ 0 -∞ +∞
-emptyTree1 = Empty< -∞ +∞ -∞<+∞
-
-emptyTree2 : 2-3Tree orderedℕ 0 [ 5 ] [ 5 ]
-emptyTree2 = Empty≡ [ 5 ] [ 5 ] refl 
+emptyTree1 = Empty -∞ +∞ -∞<+∞
 
 -- Example 2-3 tree.
-sampleTree : 2-3Tree orderedℕ 1  -∞ +∞
-sampleTree = 2Node 3
-              (Empty< -∞ [ 2 ] -∞<n )
-              ((Empty< [ 4 ] +∞ n<+∞ ))
-              (m<n (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n))))
-              (m<n (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n)))))
+sampleTree : 2-3Tree orderedℕ 1 -∞ +∞
+sampleTree = 2Node 1 -∞<n n<+∞ (Empty -∞ [ 1 ] -∞<n) (Empty [ 1 ] +∞ n<+∞)
 
--- TODO:
--- - not all trees can be defined because of strict inequality
--- - are there better lemmas for proving 10 < 23 ?
+sampleTree2 : 2-3Tree orderedℕ 1 -∞ +∞
+sampleTree2 = 3Node 1 2 -∞<n (m<n (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n))) n<+∞ (Empty -∞ [ 1 ] -∞<n) (Empty [ 1 ] [ 2 ] (m<n (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n)))) (Empty [ 2 ] +∞ n<+∞)
+
+sampleTree3 : 2-3Tree orderedℕ 2 -∞ +∞
+sampleTree3 = 2Node 3 -∞<n n<+∞ 
+  (3Node 1 2 -∞<n 
+    (m<n (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n))) 
+    (m<n (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n)))) 
+    (Empty -∞ [ 1 ] -∞<n) 
+    (Empty [ 1 ] [ 2 ] (m<n (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n)))) 
+    (Empty [ 2 ] [ 3 ] (m<n (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n)))))) 
+  (2Node 4 
+    (m<n (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n))))) 
+    n<+∞ 
+    (Empty [ 3 ] [ 4 ] (m<n (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n)))))) 
+    (Empty [ 4 ] +∞ n<+∞))
+
+-- -- TODO:
+-- -- - not all trees can be defined because of strict inequality
+-- -- - are there better lemmas for proving 10 < 23 ?
