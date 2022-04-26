@@ -1,8 +1,11 @@
 open import Relation.Binary
-open import Data.Nat using (ℕ; zero; suc) renaming (_<_ to _<ℕ_)
+open import Data.Nat using (ℕ; zero; suc; _⊔_) renaming (_<_ to _<ℕ_)
 open import Data.Nat.Properties using () renaming (<-isStrictTotalOrder to <ℕ-isStrictTotalOrder)
 open import Relation.Binary.PropositionalEquality
 open import Level using (0ℓ)
+open import Data.Product using (∃; ∃-syntax; _,_)
+open import Data.Bool.Base using (if_then_else_; false; true)
+
 
 -- Add -∞ and ∞ to the set.
 -- Example: add -∞ and ∞ to ℕ.
@@ -71,6 +74,7 @@ orderedInfinity record { S = S₀ ; _<_ = _<₀_ ; strictTotalOrder = strictTota
   
 -- Define type for 2-3 trees.
 data 2-3Tree (A : OrderedSet) : ℕ → (OrderedSet.S (orderedInfinity A)) → (OrderedSet.S (orderedInfinity A)) → Set where
+  -- Empty node
   Empty : (min max : (OrderedSet.S (orderedInfinity A)))
         → (OrderedSet._<_ (orderedInfinity A)) min max
         → 2-3Tree A 0 min max
@@ -90,7 +94,9 @@ data 2-3Tree (A : OrderedSet) : ℕ → (OrderedSet.S (orderedInfinity A)) → (
         → 2-3Tree A h min [ a ] → 2-3Tree A h [ a ] [ b ] → 2-3Tree A h [ b ] max
         → 2-3Tree A (suc h) min max
 
+-- Search - is element in tree?
 data _∈_ {A : OrderedSet} {min max : (OrderedSet.S (orderedInfinity A))} : {h : ℕ} → OrderedSet.S A → 2-3Tree A h min max → Set where
+  -- Element is in this node
   here₂ : {h : ℕ} {a : OrderedSet.S A} {l : 2-3Tree A h min [ a ]} {r : 2-3Tree A h [ a ] max} 
     {p : min <∞ [ a ]} {q : [ a ] <∞ max} 
     → a ∈ 2Node a p q l r
@@ -101,6 +107,7 @@ data _∈_ {A : OrderedSet} {min max : (OrderedSet.S (orderedInfinity A))} : {h 
     {p : min <∞ [ a ]} {q : [ a ] <∞ [ b ]} {s : [ b ] <∞ max}
     → b ∈ 3Node a b p q s l m r
   
+  -- Element is in left/right subtree
   left₂ : {h : ℕ} {a b : OrderedSet.S A} {l : 2-3Tree A h min [ b ]} {r : 2-3Tree A h [ b ] max} 
     {p : min <∞ [ b ]} {q : [ b ] <∞ max} 
     → a ∈ l
@@ -110,6 +117,7 @@ data _∈_ {A : OrderedSet} {min max : (OrderedSet.S (orderedInfinity A))} : {h 
     → a ∈ r
     → a ∈ 2Node b p q l r
 
+  -- Element is in left/middle/right subtree
   left₃ : {h : ℕ} {a b c : OrderedSet.S A} {l : 2-3Tree A h min [ b ]} {m : 2-3Tree A h [ b ] [ c ]} {r : 2-3Tree A h [ c ] max}
     {p : min <∞ [ b ]} {q : [ b ] <∞ [ c ]} {s : [ c ] <∞ max}
     → a ∈ l
@@ -122,6 +130,55 @@ data _∈_ {A : OrderedSet} {min max : (OrderedSet.S (orderedInfinity A))} : {h 
     {p : min <∞ [ b ]} {q : [ b ] <∞ [ c ]} {s : [ c ] <∞ max}
     → a ∈ r
     → a ∈ 3Node b c p q s l m r
+
+-- Insert element into a tree
+insert : {A : OrderedSet} {h : ℕ} {min max : (OrderedSet.S (orderedInfinity A))}
+  → 2-3Tree A h min max → (a : OrderedSet.S A)
+  → {p : (OrderedSet._<_ (orderedInfinity A)) min [ a ]} {q : (OrderedSet._<_ (orderedInfinity A)) [ a ] max} {h' : ℕ}
+  → ∃ λ z -- bit if height increased
+  → 2-3Tree A (if z then (suc h) else h) min max
+
+-- Empty tree -> height increased
+insert (Empty min max x) a {p} {q} = true ,
+  2Node a p q
+    (Empty min [ a ] p)
+    (Empty [ a ] max q)
+
+-- Insert into 2Node
+insert {A} (2Node b p' q' l r) a {p} {q}
+  with IsStrictTotalOrder.compare (OrderedSet.strictTotalOrder (orderedInfinity A)) [ a ] [ b ]
+-- In node -> height unchanged
+... | tri≈ ¬x y ¬z = false , 2Node b p' q' l r
+-- Insert in left tree
+insert {A} (2Node b p' q' l r) a {p} {q} | tri< x ¬y ¬z with insert l a {p} {x}
+... | false , l' = false ,  2Node b p' q' l' r
+... | true , l' = {!  !} -- TODO balancing
+insert {A} (2Node b p' q' l r) a {p} {q} | tri> ¬x ¬y z with insert r a {z} {q}
+... | false , r' = false , 2Node b p' q' l r'
+... | true , r' = {!   !} -- TODO balancing
+
+-- Insert into 3Node
+insert {A} (3Node b c p' q' s' l m r) a {p} {q}
+  with IsStrictTotalOrder.compare (OrderedSet.strictTotalOrder (orderedInfinity A)) [ a ] [ b ]
+-- Node in tree (a ≡ b)
+insert {A} (3Node b c p' q' s' l m r) a {p} {q} | tri≈ ¬x y ¬z = false , 3Node b c p' q' s' l m r
+-- a < b -> insert in left tree
+insert {A} (3Node b c p' q' s' l m r) a {p} {q} | tri< x ¬y ¬z with insert l a {p} {x}
+... | false , l' = false , 3Node b c p' q' s' l' m r
+... | true , l' = {!   !} -- TODO balancing
+-- a > b -> check if a < c
+insert {A} (3Node b c p' q' s' l m r) a {p} {q} | tri> ¬x ¬y z 
+  with IsStrictTotalOrder.compare (OrderedSet.strictTotalOrder (orderedInfinity A)) [ a ] [ c ]
+-- a ≡ c -> already inserted
+insert {A} (3Node b c p' q' s' l m r) a {p} {q} | tri> ¬x ¬y z | tri≈ ¬x' y' ¬z' = false , 3Node b c p' q' s' l m r
+-- a < c -> insert in middle tree
+insert {A} (3Node b c p' q' s' l m r) a {p} {q} | tri> ¬x ¬y z | tri< x' ¬y' ¬z' with insert m a {z} {x'}
+... | false , m' = false , 3Node b c p' q' s' l m' r
+... | true , m' = {!   !} -- TODO balancing
+-- a > c -> insert in right tree
+insert {A} (3Node b c p' q' s' l m r) a {p} {q} | tri> ¬x ¬y z | tri> ¬x' ¬y' z' with insert r a {z'} {q}
+... | false , r' = false , 3Node b c p' q' s' l m r'
+... | true , r' = {!  !} -- TODO balancing
 
 -- EXAMPLE:
 -- Natural number are ordered set
