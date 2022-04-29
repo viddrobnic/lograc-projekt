@@ -4,7 +4,7 @@ open import Data.Nat.Properties using () renaming (<-isStrictTotalOrder to <ℕ-
 open import Relation.Binary.PropositionalEquality
 open import Level using (0ℓ)
 open import Data.Product using (∃; ∃-syntax; _,_)
-open import Data.Bool.Base using (if_then_else_; false; true)
+open import Data.Bool.Base using (if_then_else_; false; true; Bool)
 
 
 -- Add -∞ and ∞ to the set.
@@ -148,14 +148,20 @@ insert (Empty min max x) a {p} {q} = true ,
 insert {A} (2Node b p' q' l r) a {p} {q}
   with IsStrictTotalOrder.compare (OrderedSet.strictTotalOrder (orderedInfinity A)) [ a ] [ b ]
 -- In node -> height unchanged
-... | tri≈ ¬x y ¬z = false , 2Node b p' q' l r
+insert {A} (2Node b p' q' l r) a {p} {q} | tri≈ ¬x y ¬z = false , 2Node b p' q' l r
 -- Insert in left tree
 insert {A} (2Node b p' q' l r) a {p} {q} | tri< x ¬y ¬z with insert l a {p} {x}
 ... | false , l' = false ,  2Node b p' q' l' r
-... | true , l' = {!  !} -- TODO balancing
+-- Returned 2Node -> merge
+... | true , 2Node c p'' q'' l' r' = false , 3Node c b p'' q'' q' l' r' r
+-- Returned 3Node -> agda should know that this is impossible
+... | true , 3Node c d p'' q'' s'' l' m' r' = {!   !}
 insert {A} (2Node b p' q' l r) a {p} {q} | tri> ¬x ¬y z with insert r a {z} {q}
 ... | false , r' = false , 2Node b p' q' l r'
-... | true , r' = {!   !} -- TODO balancing
+-- Returned 2Node -> merge
+... | true , 2Node c p'' q'' l' r' = false , 3Node b c p' p'' q'' l l' r'
+-- Returned 3Node -> agda should know that this is impossible
+... | true , 3Node c d p'' q'' s'' l' m' r' = {!   !}
 
 -- Insert into 3Node
 insert {A} (3Node b c p' q' s' l m r) a {p} {q}
@@ -165,7 +171,13 @@ insert {A} (3Node b c p' q' s' l m r) a {p} {q} | tri≈ ¬x y ¬z = false , 3No
 -- a < b -> insert in left tree
 insert {A} (3Node b c p' q' s' l m r) a {p} {q} | tri< x ¬y ¬z with insert l a {p} {x}
 ... | false , l' = false , 3Node b c p' q' s' l' m r
-... | true , l' = {!   !} -- TODO balancing
+-- Returned 2Node -> break 3Node
+... | true , 2Node d p'' q'' l' r' = true , 2Node b
+  p'
+  (IsStrictTotalOrder.trans (OrderedSet.strictTotalOrder (orderedInfinity A)) q' s')
+  (2Node d p'' q'' l' r')
+  (2Node c q' s' m r)
+... | true , 3Node a₁ b₁ x₁ x₂ x₃ t t₁ t₂ = {!   !} -- TODO isto ne sme it cez
 -- a > b -> check if a < c
 insert {A} (3Node b c p' q' s' l m r) a {p} {q} | tri> ¬x ¬y z 
   with IsStrictTotalOrder.compare (OrderedSet.strictTotalOrder (orderedInfinity A)) [ a ] [ c ]
@@ -174,11 +186,21 @@ insert {A} (3Node b c p' q' s' l m r) a {p} {q} | tri> ¬x ¬y z | tri≈ ¬x' y
 -- a < c -> insert in middle tree
 insert {A} (3Node b c p' q' s' l m r) a {p} {q} | tri> ¬x ¬y z | tri< x' ¬y' ¬z' with insert m a {z} {x'}
 ... | false , m' = false , 3Node b c p' q' s' l m' r
-... | true , m' = {!   !} -- TODO balancing
+... | true , 2Node d p'' q'' l' r' = true , (2Node d
+  (IsStrictTotalOrder.trans (OrderedSet.strictTotalOrder (orderedInfinity A)) p' p'')
+  (IsStrictTotalOrder.trans (OrderedSet.strictTotalOrder (orderedInfinity A)) q'' s')
+  (2Node b p' p'' l l')
+  (2Node c q'' s' r' r))
+... | true , 3Node d e p'' q'' s'' l' r' m' = {!   !} -- TODO ne sme delat
 -- a > c -> insert in right tree
 insert {A} (3Node b c p' q' s' l m r) a {p} {q} | tri> ¬x ¬y z | tri> ¬x' ¬y' z' with insert r a {z'} {q}
 ... | false , r' = false , 3Node b c p' q' s' l m r'
-... | true , r' = {!  !} -- TODO balancing
+... | true , 2Node d p'' q'' l' r' = true , 2Node c
+  (IsStrictTotalOrder.trans (OrderedSet.strictTotalOrder (orderedInfinity A)) p' q')
+  s'
+  (2Node b p' q' l m)
+  (2Node d p'' q'' l' r')
+... | true , 3Node d e p'' q'' s'' l' m' r' = {!   !} -- TODO ne sme delat
 
 -- EXAMPLE:
 -- Natural number are ordered set
@@ -258,3 +280,4 @@ sampleTree4 = 3Node 2 4 -∞<n
 
 5-in-sampleTree4 : 5 ∈ sampleTree4
 5-in-sampleTree4 = right₃ here₂
+  
