@@ -5,6 +5,7 @@ open import Relation.Binary.PropositionalEquality
 open import Level using (0ℓ)
 open import Data.Product using (∃; ∃-syntax; _,_)
 open import Data.Bool.Base using (if_then_else_; false; true; Bool)
+open import Data.Empty using (⊥-elim)
 
 
 -- Add -∞ and ∞ to the set.
@@ -138,6 +139,14 @@ insert : {A : OrderedSet} {h : ℕ} {min max : (OrderedSet.S (orderedInfinity A)
   → ∃ λ z -- bit if height increased
   → 2-3Tree A (if z then (suc h) else h) min max
 
+-- Ideja:
+-- vrnemo zraven se en tak tip ki je parametriziran na drevo in na z.
+-- Ta tip pove se vec o tem kaj vrnemo
+-- P : Bool -> ... -> Set
+-- P false t = Top
+-- P true (3Node) = Bot
+-- P true ... = Top 
+
 -- Empty tree -> height increased
 insert (Empty min max x) a {p} {q} = true ,
   2Node a p q
@@ -161,7 +170,7 @@ insert {A} (2Node b p' q' l r) a {p} {q} | tri> ¬x ¬y z with insert r a {z} {q
 -- Returned 2Node -> merge
 ... | true , 2Node c p'' q'' l' r' = false , 3Node b c p' p'' q'' l l' r'
 -- Returned 3Node -> agda should know that this is impossible
-... | true , 3Node c d p'' q'' s'' l' m' r' = {!   !}
+... | true , 3Node c d p'' q'' s'' l' m' r' = {!  !}
 
 -- Insert into 3Node
 insert {A} (3Node b c p' q' s' l m r) a {p} {q}
@@ -280,4 +289,4 @@ sampleTree4 = 3Node 2 4 -∞<n
 
 5-in-sampleTree4 : 5 ∈ sampleTree4
 5-in-sampleTree4 = right₃ here₂
-  
+   
