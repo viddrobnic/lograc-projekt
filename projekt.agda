@@ -159,7 +159,7 @@ insert {A} (2Node b p' q' l r) a {p} {q}
 -- In node -> height unchanged
 insert {A} (2Node b p' q' l r) a {p} {q} | tri≈ ¬x y ¬z = false , 2Node b p' q' l r , w-2Node
 -- Insert in left tree
-insert {A} (2Node b p' q' l r) a {p} {q} | tri< x ¬y ¬z with insert l a {p} {x}
+insert {A} {h} (2Node b p' q' l r) a {p} {q} | tri< x ¬y ¬z with insert l a {p} {x}
 ... | false , (l' , w) =  false , 2Node b p' q' l' r , w-2Node 
 -- Returned 2Node -> merge
 ... | true , (2Node c p'' q'' l' r' , w) = false , 3Node c b p'' q'' q' l' r' r , w-3Node
@@ -289,4 +289,14 @@ sampleTree4 = 3Node 2 4 -∞<n
 
 5-in-sampleTree4 : 5 ∈ sampleTree4
 5-in-sampleTree4 = right₃ here₂
-    
+
+-- Insertion example
+tree0 : 2-3Tree orderedℕ 0 -∞ +∞
+tree0 = Empty -∞ +∞ -∞<+∞
+
+tree1 = proj₁ (proj₂ (insert tree0 5))
+tree2 = proj₁ (proj₂ (insert tree1 10))
+tree3 = proj₁ (proj₂ (insert tree2 5))
+tree4 = proj₁ (proj₂ (insert tree3 1))
+tree5 = proj₁ (proj₂ (insert tree4 2))
+tree6 = proj₁ (proj₂ (insert tree5 3))
