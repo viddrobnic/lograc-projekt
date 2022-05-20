@@ -3,7 +3,7 @@ open import Data.Nat using (ℕ; zero; suc; _⊔_) renaming (_<_ to _<ℕ_)
 open import Data.Nat.Properties using () renaming (<-isStrictTotalOrder to <ℕ-isStrictTotalOrder)
 open import Relation.Binary.PropositionalEquality
 open import Level using (0ℓ)
-open import Data.Product using (∃; ∃-syntax; _,_; _×_)
+open import Data.Product
 open import Data.Bool.Base using (if_then_else_; false; true; Bool)
 open import Data.Empty using (⊥-elim; ⊥)
 
@@ -145,79 +145,71 @@ insert : {A : OrderedSet} {h : ℕ} {min max : (OrderedSet.S (orderedInfinity A)
   → 2-3Tree A h min max → (a : OrderedSet.S A)
   → {p : (OrderedSet._<_ (orderedInfinity A)) min [ a ]} {q : (OrderedSet._<_ (orderedInfinity A)) [ a ] max} {h' : ℕ}
   → ∃ λ z -- bit if height increased
-  → {t : 2-3Tree A (if z then (suc h) else h) min max}
-  → (2-3Tree A (if z then (suc h) else h) min max) × (InsertWitness z t)
-  -- TODO: Tuki rabiva vsoto
+  → Σ[ t ∈ (2-3Tree A (if z then (suc h) else h) min max) ] InsertWitness z t
 
 -- Empty tree -> height increased
 insert (Empty min max x) a {p} {q} = true ,
-  (t , {!  w-2Node !})
-    where
-      t = 2Node a p q
-        (Empty min [ a ] p)
-        (Empty [ a ] max q)
-
-insert = {!   !}
-
-  
+  (2Node a p q
+    (Empty min [ a ] p)
+    (Empty [ a ] max q) , w-2Node)
 
 -- -- Insert into 2Node
--- insert {A} (2Node b p' q' l r) a {p} {q}
---   with IsStrictTotalOrder.compare (OrderedSet.strictTotalOrder (orderedInfinity A)) [ a ] [ b ]
--- -- In node -> height unchanged
--- insert {A} (2Node b p' q' l r) a {p} {q} | tri≈ ¬x y ¬z = false , 2Node b p' q' l r
--- -- Insert in left tree
--- insert {A} (2Node b p' q' l r) a {p} {q} | tri< x ¬y ¬z with insert l a {p} {x}
--- ... | false , l' = false ,  2Node b p' q' l' r
--- -- Returned 2Node -> merge
--- ... | true , 2Node c p'' q'' l' r' = false , 3Node c b p'' q'' q' l' r' r
--- -- Returned 3Node -> agda should know that this is impossible
--- ... | true , 3Node c d p'' q'' s'' l' m' r' = {!   !}
--- insert {A} (2Node b p' q' l r) a {p} {q} | tri> ¬x ¬y z with insert r a {z} {q}
--- ... | false , r' = false , 2Node b p' q' l r'
--- -- Returned 2Node -> merge
--- ... | true , 2Node c p'' q'' l' r' = false , 3Node b c p' p'' q'' l l' r'
--- -- Returned 3Node -> agda should know that this is impossible
--- ... | true , 3Node c d p'' q'' s'' l' m' r' = {!  !}
+insert {A} (2Node b p' q' l r) a {p} {q}
+  with IsStrictTotalOrder.compare (OrderedSet.strictTotalOrder (orderedInfinity A)) [ a ] [ b ]
+-- In node -> height unchanged
+insert {A} (2Node b p' q' l r) a {p} {q} | tri≈ ¬x y ¬z = false , 2Node b p' q' l r , w-2Node
+-- Insert in left tree
+insert {A} (2Node b p' q' l r) a {p} {q} | tri< x ¬y ¬z with insert l a {p} {x}
+... | false , (l' , w) =  false , 2Node b p' q' l' r , w-2Node 
+-- Returned 2Node -> merge
+... | true , (2Node c p'' q'' l' r' , w) = false , 3Node c b p'' q'' q' l' r' r , w-3Node
+-- Returned 3Node -> agda should know that this is impossible
+... | true , 3Node c d p'' q'' s'' l' m' r' , ()
+insert {A} (2Node b p' q' l r) a {p} {q} | tri> ¬x ¬y z with insert r a {z} {q}
+... | false , (r' , w) =  false , 2Node b p' q' l r' ,  w-2Node 
+-- Returned 2Node -> merge
+... | true , (2Node c p'' q'' l' r' , w) = false , 3Node b c p' p'' q'' l l' r' , w-3Node
+-- Returned 3Node -> agda should know that this is impossible
+... | true , 3Node c d p'' q'' s'' l' m' r' , ()
 
--- -- Insert into 3Node
--- insert {A} (3Node b c p' q' s' l m r) a {p} {q}
---   with IsStrictTotalOrder.compare (OrderedSet.strictTotalOrder (orderedInfinity A)) [ a ] [ b ]
--- -- Node in tree (a ≡ b)
--- insert {A} (3Node b c p' q' s' l m r) a {p} {q} | tri≈ ¬x y ¬z = false , 3Node b c p' q' s' l m r
--- -- a < b -> insert in left tree
--- insert {A} (3Node b c p' q' s' l m r) a {p} {q} | tri< x ¬y ¬z with insert l a {p} {x}
--- ... | false , l' = false , 3Node b c p' q' s' l' m r
--- -- Returned 2Node -> break 3Node
--- ... | true , 2Node d p'' q'' l' r' = true , 2Node b
---   p'
---   (IsStrictTotalOrder.trans (OrderedSet.strictTotalOrder (orderedInfinity A)) q' s')
---   (2Node d p'' q'' l' r')
---   (2Node c q' s' m r)
--- ... | true , 3Node a₁ b₁ x₁ x₂ x₃ t t₁ t₂ = {!   !} -- TODO isto ne sme it cez
--- -- a > b -> check if a < c
--- insert {A} (3Node b c p' q' s' l m r) a {p} {q} | tri> ¬x ¬y z 
---   with IsStrictTotalOrder.compare (OrderedSet.strictTotalOrder (orderedInfinity A)) [ a ] [ c ]
--- -- a ≡ c -> already inserted
--- insert {A} (3Node b c p' q' s' l m r) a {p} {q} | tri> ¬x ¬y z | tri≈ ¬x' y' ¬z' = false , 3Node b c p' q' s' l m r
--- -- a < c -> insert in middle tree
--- insert {A} (3Node b c p' q' s' l m r) a {p} {q} | tri> ¬x ¬y z | tri< x' ¬y' ¬z' with insert m a {z} {x'}
--- ... | false , m' = false , 3Node b c p' q' s' l m' r
--- ... | true , 2Node d p'' q'' l' r' = true , (2Node d
---   (IsStrictTotalOrder.trans (OrderedSet.strictTotalOrder (orderedInfinity A)) p' p'')
---   (IsStrictTotalOrder.trans (OrderedSet.strictTotalOrder (orderedInfinity A)) q'' s')
---   (2Node b p' p'' l l')
---   (2Node c q'' s' r' r))
--- ... | true , 3Node d e p'' q'' s'' l' r' m' = {!   !} -- TODO ne sme delat
--- -- a > c -> insert in right tree
--- insert {A} (3Node b c p' q' s' l m r) a {p} {q} | tri> ¬x ¬y z | tri> ¬x' ¬y' z' with insert r a {z'} {q}
--- ... | false , r' = false , 3Node b c p' q' s' l m r'
--- ... | true , 2Node d p'' q'' l' r' = true , 2Node c
---   (IsStrictTotalOrder.trans (OrderedSet.strictTotalOrder (orderedInfinity A)) p' q')
---   s'
---   (2Node b p' q' l m)
---   (2Node d p'' q'' l' r')
--- ... | true , 3Node d e p'' q'' s'' l' m' r' = {!   !} -- TODO ne sme delat
+-- Insert into 3Node
+insert {A} (3Node b c p' q' s' l m r) a {p} {q}
+  with IsStrictTotalOrder.compare (OrderedSet.strictTotalOrder (orderedInfinity A)) [ a ] [ b ]
+-- Node in tree (a ≡ b)
+insert {A} (3Node b c p' q' s' l m r) a {p} {q} | tri≈ ¬x y ¬z = false , 3Node b c p' q' s' l m r , w-3Node
+-- a < b -> insert in left tree
+insert {A} (3Node b c p' q' s' l m r) a {p} {q} | tri< x ¬y ¬z with insert l a {p} {x}
+... | false , (l' , w) = false , 3Node b c p' q' s' l' m r , w-3Node
+-- Returned 2Node -> break 3Node
+... | true , (2Node d p'' q'' l' r' , w) = true , 2Node b
+  p'
+  (IsStrictTotalOrder.trans (OrderedSet.strictTotalOrder (orderedInfinity A)) q' s')
+  (2Node d p'' q'' l' r')
+  (2Node c q' s' m r) , w-2Node 
+... | true , 3Node a₁ b₁ x₁ x₂ x₃ t t₁ t₂ , ()
+-- a > b -> check if a < c
+insert {A} (3Node b c p' q' s' l m r) a {p} {q} | tri> ¬x ¬y z 
+  with IsStrictTotalOrder.compare (OrderedSet.strictTotalOrder (orderedInfinity A)) [ a ] [ c ]
+-- a ≡ c -> already inserted
+insert {A} (3Node b c p' q' s' l m r) a {p} {q} | tri> ¬x ¬y z | tri≈ ¬x' y' ¬z' = false , 3Node b c p' q' s' l m r , w-3Node 
+-- a < c -> insert in middle tree
+insert {A} (3Node b c p' q' s' l m r) a {p} {q} | tri> ¬x ¬y z | tri< x' ¬y' ¬z' with insert m a {z} {x'}
+... | false , (m' , w) = false , 3Node b c p' q' s' l m' r , w-3Node
+... | true , (2Node d p'' q'' l' r' , w) = true , (2Node d
+  (IsStrictTotalOrder.trans (OrderedSet.strictTotalOrder (orderedInfinity A)) p' p'')
+  (IsStrictTotalOrder.trans (OrderedSet.strictTotalOrder (orderedInfinity A)) q'' s')
+  (2Node b p' p'' l l')
+  (2Node c q'' s' r' r)) , w-2Node 
+... | true , 3Node d e p'' q'' s'' l' r' m' , ()
+-- a > c -> insert in right tree
+insert {A} (3Node b c p' q' s' l m r) a {p} {q} | tri> ¬x ¬y z | tri> ¬x' ¬y' z' with insert r a {z'} {q}
+... | false , (r' , w) = false , 3Node b c p' q' s' l m r' , w-3Node 
+... | true , (2Node d p'' q'' l' r' , w) = true , 2Node c
+  (IsStrictTotalOrder.trans (OrderedSet.strictTotalOrder (orderedInfinity A)) p' q')
+  s'
+  (2Node b p' q' l m)
+  (2Node d p'' q'' l' r'), w-2Node
+... | true , 3Node d e p'' q'' s'' l' m' r' , ()
 
 -- EXAMPLE:
 -- Natural number are ordered set
