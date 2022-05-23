@@ -136,14 +136,14 @@ data InsertWitness {A : OrderedSet} {min max : (OrderedSet.S (orderedInfinity A)
   w-2Node : {h : ℕ} {a : OrderedSet.S A} {l : 2-3Tree A h min [ a ]} {r : 2-3Tree A h [ a ] max} 
     {p : min <∞ [ a ]} {q : [ a ] <∞ max} {b : Bool}
     → InsertWitness b (2Node a p q l r)
-  w-3Node : {h : ℕ} {h : ℕ} {a b : OrderedSet.S A} {l : 2-3Tree A h min [ a ]} {m : 2-3Tree A h [ a ] [ b ]} {r : 2-3Tree A h [ b ] max}
+  w-3Node : {h : ℕ} {a b : OrderedSet.S A} {l : 2-3Tree A h min [ a ]} {m : 2-3Tree A h [ a ] [ b ]} {r : 2-3Tree A h [ b ] max}
     {p : min <∞ [ a ]} {q : [ a ] <∞ [ b ]} {s : [ b ] <∞ max}
     → InsertWitness false (3Node a b p q s l m r)
 
 -- Insert element into a tree
 insert : {A : OrderedSet} {h : ℕ} {min max : (OrderedSet.S (orderedInfinity A))}
   → 2-3Tree A h min max → (a : OrderedSet.S A)
-  → {p : (OrderedSet._<_ (orderedInfinity A)) min [ a ]} {q : (OrderedSet._<_ (orderedInfinity A)) [ a ] max} {h' : ℕ}
+  → {p : (OrderedSet._<_ (orderedInfinity A)) min [ a ]} {q : (OrderedSet._<_ (orderedInfinity A)) [ a ] max}
   → ∃ λ z -- bit if height increased
   → Σ[ t ∈ (2-3Tree A (if z then (suc h) else h) min max) ] InsertWitness z t
 
@@ -159,7 +159,7 @@ insert {A} (2Node b p' q' l r) a {p} {q}
 -- In node -> height unchanged
 insert {A} (2Node b p' q' l r) a {p} {q} | tri≈ ¬x y ¬z = false , 2Node b p' q' l r , w-2Node
 -- Insert in left tree
-insert {A} {h} (2Node b p' q' l r) a {p} {q} | tri< x ¬y ¬z with insert l a {p} {x}
+insert {A} {h} {min} (2Node {h'} b p' q' l r) a {p} {q} | tri< x ¬y ¬z with insert l a {p} {x}
 ... | false , (l' , w) =  false , 2Node b p' q' l' r , w-2Node 
 -- Returned 2Node -> merge
 ... | true , (2Node c p'' q'' l' r' , w) = false , 3Node c b p'' q'' q' l' r' r , w-3Node
@@ -210,6 +210,10 @@ insert {A} (3Node b c p' q' s' l m r) a {p} {q} | tri> ¬x ¬y z | tri> ¬x' ¬y
   (2Node b p' q' l m)
   (2Node d p'' q'' l' r'), w-2Node
 ... | true , 3Node d e p'' q'' s'' l' m' r' , ()
+
+-- TODO lemma after insertion of a a should be in tree.
+-- TODO search which returns true or false
+-- TODO if you have two proofs a ∈ t, then the proofs are the same.
 
 -- EXAMPLE:
 -- Natural number are ordered set
@@ -294,9 +298,9 @@ sampleTree4 = 3Node 2 4 -∞<n
 tree0 : 2-3Tree orderedℕ 0 -∞ +∞
 tree0 = Empty -∞ +∞ -∞<+∞
 
-tree1 = proj₁ (proj₂ (insert tree0 5))
-tree2 = proj₁ (proj₂ (insert tree1 10))
-tree3 = proj₁ (proj₂ (insert tree2 5))
-tree4 = proj₁ (proj₂ (insert tree3 1))
-tree5 = proj₁ (proj₂ (insert tree4 2))
-tree6 = proj₁ (proj₂ (insert tree5 3))
+tree1 = proj₁ (proj₂ (insert tree0 5 {p = -∞<n} {q = n<+∞}))
+tree2 = proj₁ (proj₂ (insert tree1 10 {p = -∞<n} {q = n<+∞}))
+tree3 = proj₁ (proj₂ (insert tree2 5 {p = -∞<n} {q = n<+∞}))
+tree4 = proj₁ (proj₂ (insert tree3 1 {p = -∞<n} {q = n<+∞}))
+tree5 = proj₁ (proj₂ (insert tree4 2 {p = -∞<n} {q = n<+∞}))
+tree6 = proj₁ (proj₂ (insert tree5 3 {p = -∞<n} {q = n<+∞}))
