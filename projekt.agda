@@ -169,27 +169,85 @@ data Dec {l : Level} (A : Set l) : Set l where
   no  : (A → ⊥) → Dec A
 
 -- Lemmas for search
-not-in-if-not-in-left : {A : OrderedSet} {min max : (OrderedSet.S (orderedInfinity A))} {h : ℕ} {a b : OrderedSet.S A} {l : 2-3Tree A h min [ b ]} {r : 2-3Tree A h [ b ] max} {p : min <∞ [ b ]} {q : [ b ] <∞ max}
+not-in-if-not-in-left₂ : {A : OrderedSet} {min max : (OrderedSet.S (orderedInfinity A))} {h : ℕ} {a b : OrderedSet.S A} {l : 2-3Tree A h min [ b ]} {r : 2-3Tree A h [ b ] max} {p : min <∞ [ b ]} {q : [ b ] <∞ max}
   → (OrderedSet._<_ (orderedInfinity A)) [ a ] [ b ]
   → (a ∈ l → ⊥)
   → (a ∈ 2Node b p q l r → ⊥)
-not-in-if-not-in-left {A} [a]<[b] a∉l here₂ = <∞-not-equal {A = A} [a]<[b] refl
-not-in-if-not-in-left {A} [a]<[b] a∉l (left₂ a∈l) = a∉l a∈l
-not-in-if-not-in-left {A} {a = a} {b = b} [a]<[b] a∉l (right₂ a∈r) with IsStrictTotalOrder.compare (OrderedSet.strictTotalOrder (orderedInfinity A)) [ a ] [ b ]
+not-in-if-not-in-left₂ {A} [a]<[b] a∉l here₂ = <∞-not-equal {A = A} [a]<[b] refl
+not-in-if-not-in-left₂ {A} [a]<[b] a∉l (left₂ a∈l) = a∉l a∈l
+not-in-if-not-in-left₂ {A} {a = a} {b = b} [a]<[b] a∉l (right₂ a∈r) with IsStrictTotalOrder.compare (OrderedSet.strictTotalOrder (orderedInfinity A)) [ a ] [ b ]
 ... | tri< x ¬y ¬z = ¬z (if-in-more-than-min a∈r)
 ... | tri≈ ¬x y ¬z = ¬z (if-in-more-than-min a∈r)
 ... | tri> ¬x ¬y z = ¬x [a]<[b]
 
-not-in-if-not-in-right : {A : OrderedSet} {min max : (OrderedSet.S (orderedInfinity A))} {h : ℕ} {a b : OrderedSet.S A} {l : 2-3Tree A h min [ b ]} {r : 2-3Tree A h [ b ] max} {p : min <∞ [ b ]} {q : [ b ] <∞ max}
+not-in-if-not-in-right₂ : {A : OrderedSet} {min max : (OrderedSet.S (orderedInfinity A))} {h : ℕ} {a b : OrderedSet.S A} {l : 2-3Tree A h min [ b ]} {r : 2-3Tree A h [ b ] max} {p : min <∞ [ b ]} {q : [ b ] <∞ max}
   → (OrderedSet._<_ (orderedInfinity A)) [ b ] [ a ]
   → (a ∈ r → ⊥)
   → (a ∈ 2Node b p q l r → ⊥)
-not-in-if-not-in-right {A} [b]<[a] a∉r here₂ = <∞-not-equal {A = A} [b]<[a] refl
-not-in-if-not-in-right {A} {a = a} {b = b} [b]<[a] a∉r (left₂ a∈l) with IsStrictTotalOrder.compare (OrderedSet.strictTotalOrder (orderedInfinity A)) [ a ] [ b ]
+not-in-if-not-in-right₂ {A} [b]<[a] a∉r here₂ = <∞-not-equal {A = A} [b]<[a] refl
+not-in-if-not-in-right₂ {A} {a = a} {b = b} [b]<[a] a∉r (left₂ a∈l) with IsStrictTotalOrder.compare (OrderedSet.strictTotalOrder (orderedInfinity A)) [ a ] [ b ]
 ... | tri< x ¬y ¬z = ¬z [b]<[a]
 ... | tri≈ ¬x y ¬z = ¬x (if-in-less-than-max a∈l)
 ... | tri> ¬x ¬y z = ¬x (if-in-less-than-max a∈l)
-not-in-if-not-in-right {A} [b]<[a] a∉r (right₂ a∈r) = a∉r a∈r
+not-in-if-not-in-right₂ {A} [b]<[a] a∉r (right₂ a∈r) = a∉r a∈r
+
+not-in-if-not-in-left₃ : {A : OrderedSet} {min max : (OrderedSet.S (orderedInfinity A))} {h : ℕ} {a b c : OrderedSet.S A} {l : 2-3Tree A h min [ b ]} {m : 2-3Tree A h [ b ] [ c ]} {r : 2-3Tree A h [ c ] max}
+    {p : min <∞ [ b ]} {q : [ b ] <∞ [ c ]} {s : [ c ] <∞ max}
+  → (OrderedSet._<_ (orderedInfinity A)) [ a ] [ b ]
+  → (a ∈ l → ⊥)
+  → (a ∈ 3Node b c p q s l m r → ⊥)
+not-in-if-not-in-left₃ {A} [a]<[b] a∉l here₃-l = <∞-not-equal {A = A} [a]<[b] refl
+not-in-if-not-in-left₃ {A} {a = a} {b = b} [a]<[b] a∉l (here₃-r {q = q}) with IsStrictTotalOrder.compare (OrderedSet.strictTotalOrder (orderedInfinity A)) [ a ] [ b ]
+... | tri< x ¬y ¬z = ¬z q
+... | tri≈ ¬x y ¬z = ¬z q
+... | tri> ¬x ¬y z = ¬x [a]<[b]
+not-in-if-not-in-left₃ {A} [a]<[b] a∉l (left₃ a∈l) = a∉l a∈l
+not-in-if-not-in-left₃ {A} {a = a} {b = b} [a]<[b] a∉l (middle₃ a∈m) with IsStrictTotalOrder.compare (OrderedSet.strictTotalOrder (orderedInfinity A)) [ a ] [ b ]
+... | tri< x ¬y ¬z = ¬z (if-in-more-than-min a∈m)
+... | tri≈ ¬x y ¬z = ¬x [a]<[b]
+... | tri> ¬x ¬y z = ¬x [a]<[b]
+not-in-if-not-in-left₃ {A} {a = a} {b = b} [a]<[b] a∉l (right₃ {r = r} {q = q} a∈r) with IsStrictTotalOrder.compare (OrderedSet.strictTotalOrder (orderedInfinity A)) [ a ] [ b ] 
+... | tri< x ¬y ¬z = ¬z (IsStrictTotalOrder.trans (OrderedSet.strictTotalOrder (orderedInfinity A)) q (if-in-more-than-min a∈r))
+... | tri≈ ¬x y ¬z = ¬x [a]<[b]
+... | tri> ¬x ¬y z = ¬x [a]<[b]
+
+not-in-if-not-in-right₃ : {A : OrderedSet} {min max : (OrderedSet.S (orderedInfinity A))} {h : ℕ} {a b c : OrderedSet.S A} {l : 2-3Tree A h min [ b ]} {m : 2-3Tree A h [ b ] [ c ]} {r : 2-3Tree A h [ c ] max}
+    {p : min <∞ [ b ]} {q : [ b ] <∞ [ c ]} {s : [ c ] <∞ max}
+  → (OrderedSet._<_ (orderedInfinity A)) [ c ] [ a ]
+  → (a ∈ r → ⊥)
+  → (a ∈ 3Node b c p q s l m r → ⊥)
+not-in-if-not-in-right₃ {A} {a = a} {c = c} [c]<[a] a∉r (here₃-l {q = q}) with IsStrictTotalOrder.compare (OrderedSet.strictTotalOrder (orderedInfinity A)) [ a ] [ c ]
+... | tri< x ¬y ¬z = ¬z [c]<[a]
+... | tri≈ ¬x y ¬z = ¬z [c]<[a]
+... | tri> ¬x ¬y z = ¬x q
+not-in-if-not-in-right₃ {A} [c]<[a] a∉r here₃-r = <∞-not-equal {A = A} [c]<[a] refl
+not-in-if-not-in-right₃ {A} {a = a} {c = c} [c]<[a] a∉r (left₃ {q = q} a∈l) with IsStrictTotalOrder.compare (OrderedSet.strictTotalOrder (orderedInfinity A)) [ a ] [ c ] 
+... | tri< x ¬y ¬z = ¬z [c]<[a]
+... | tri≈ ¬x y ¬z = ¬z [c]<[a]
+... | tri> ¬x ¬y z = ¬x ((IsStrictTotalOrder.trans (OrderedSet.strictTotalOrder (orderedInfinity A)) (if-in-less-than-max a∈l) q))
+not-in-if-not-in-right₃ {A} {a = a} {c = c} [c]<[a] a∉r (middle₃ a∈m) with IsStrictTotalOrder.compare (OrderedSet.strictTotalOrder (orderedInfinity A)) [ a ] [ c ]
+... | tri< x ¬y ¬z = ¬z [c]<[a]
+... | tri≈ ¬x y ¬z = ¬z [c]<[a]
+... | tri> ¬x ¬y z = ¬x (if-in-less-than-max a∈m)
+not-in-if-not-in-right₃ {A} [c]<[a] a∉r (right₃ a∈r) = a∉r a∈r
+
+not-in-if-not-in-middle₃ : {A : OrderedSet} {min max : (OrderedSet.S (orderedInfinity A))} {h : ℕ} {a b c : OrderedSet.S A} {l : 2-3Tree A h min [ b ]} {m : 2-3Tree A h [ b ] [ c ]} {r : 2-3Tree A h [ c ] max}
+    {p : min <∞ [ b ]} {q : [ b ] <∞ [ c ]} {s : [ c ] <∞ max}
+  → (OrderedSet._<_ (orderedInfinity A)) [ b ] [ a ]
+  → (OrderedSet._<_ (orderedInfinity A)) [ a ] [ c ]
+  → (a ∈ m → ⊥)
+  → (a ∈ 3Node b c p q s l m r → ⊥)
+not-in-if-not-in-middle₃ {A} [b]<[a] [a]<[c] a∉m here₃-l = <∞-not-equal {A = A} [b]<[a] refl
+not-in-if-not-in-middle₃ {A} {a = a} {c = c} [b]<[a] [a]<[c] a∉r (here₃-r {q = q}) = <∞-not-equal {A = A} [a]<[c] refl
+not-in-if-not-in-middle₃ {A} {a = a} {b = b} {c = c} [b]<[a] [a]<[c] a∉m (left₃ a∈l) with IsStrictTotalOrder.compare (OrderedSet.strictTotalOrder (orderedInfinity A)) [ a ] [ b ]
+... | tri< x ¬y ¬z = ¬z [b]<[a]
+... | tri≈ ¬x y ¬z = ¬z [b]<[a]
+... | tri> ¬x ¬y z = ¬x (if-in-less-than-max a∈l)
+not-in-if-not-in-middle₃ {A} {a = a} {b = b} {c = c} [b]<[a] [a]<[c] a∉m (middle₃ a∈m) = a∉m a∈m
+not-in-if-not-in-middle₃ {A} {a = a} {b = b} {c = c} [b]<[a] [a]<[c] a∉m (right₃ a∈r) with IsStrictTotalOrder.compare (OrderedSet.strictTotalOrder (orderedInfinity A)) [ a ] [ c ]
+... | tri< x ¬y ¬z = ¬z (if-in-more-than-min a∈r)
+... | tri≈ ¬x y ¬z = ¬x [a]<[c]
+... | tri> ¬x ¬y z = ¬x [a]<[c]
 
 -- Search for element
 -- Returns true if element is in tree, false otherwise.
@@ -203,25 +261,25 @@ search {A} (2Node b p q l r) a with IsStrictTotalOrder.compare (OrderedSet.stric
 search {A} (2Node b p q l r) .b | tri≈ ¬x refl ¬z = yes here₂
 search {A} (2Node b p q l r) a | tri< x ¬y ¬z with search l a
 ... | yes u = yes (left₂ u)
-... | no u = no (not-in-if-not-in-left x u)
+... | no u = no (not-in-if-not-in-left₂ x u)
 search {A} (2Node b p q l r) a | tri> ¬x ¬y z with search r a
 ... | yes u = yes (right₂ u)
-... | no u = no (not-in-if-not-in-right z u)
+... | no u = no (not-in-if-not-in-right₂ z u)
 
 -- Search in 3Node
 search {A} (3Node b c p q s l m r) a with IsStrictTotalOrder.compare (OrderedSet.strictTotalOrder (orderedInfinity A)) [ a ] [ b ]
 search {A} (3Node b c p q s l m r) .b | tri≈ ¬x refl ¬z = yes here₃-l
 search {A} (3Node b c p q s l m r) a | tri< x ¬y ¬z with search l a 
 ... | yes u = yes (left₃ u)
-... | no u = no {!   !}
+... | no u = no (not-in-if-not-in-left₃ x u)
 search {A} (3Node b c p q s l m r) a | tri> ¬x ¬y z with IsStrictTotalOrder.compare (OrderedSet.strictTotalOrder (orderedInfinity A)) [ a ] [ c ]
 search {A} (3Node b .a p q s l m r) a | tri> ¬x ¬y z | tri≈ ¬x' refl ¬z' = yes here₃-r
 search {A} (3Node b c p q s l m r) a | tri> ¬x ¬y z | tri< x' ¬y' ¬z' with search m a
 ... | yes u = yes (middle₃ u)
-... | no u = no {!   !}
+... | no u = no (not-in-if-not-in-middle₃ z x' u)
 search {A} (3Node b c p q s l m r) a | tri> ¬x ¬y z | tri> ¬x' ¬y' z' with search r a
 ... | yes u = yes (right₃ u)
-... | no u = no {!   !}
+... | no u = no (not-in-if-not-in-right₃ z' u)
 
 
 data InsertWitness {A : OrderedSet} {min max : (OrderedSet.S (orderedInfinity A))} : {h : ℕ} → (b : Bool) → 2-3Tree A h min max → Set where
@@ -303,6 +361,13 @@ insert {A} (3Node b c p' q' s' l m r) a {p} {q} | tri> ¬x ¬y z | tri> ¬x' ¬y
   (2Node b p' q' l m)
   (2Node d p'' q'' l' r'), w-2Node
 ... | true , 3Node d e p'' q'' s'' l' m' r' , ()
+
+aInTreeAfterInsert : {A : OrderedSet} {h : ℕ} {min max : (OrderedSet.S (orderedInfinity A))}
+  → (t : 2-3Tree A h min max) → (a : OrderedSet.S A)
+  → {p : (OrderedSet._<_ (orderedInfinity A)) min [ a ]} {q : (OrderedSet._<_ (orderedInfinity A)) [ a ] max}
+  → a ∈ (proj₁ (proj₂ (insert t a {p} {q})))
+aInTreeAfterInsert t a {p} {q} with (proj₁ (proj₂ (insert t a {p} {q})))
+... | t' = {! t' !}
 
 -- TODO lemma after insertion of a a should be in tree.
 -- TODO search which returns true or false
@@ -397,4 +462,4 @@ tree3 = proj₁ (proj₂ (insert tree2 5 {p = -∞<n} {q = n<+∞}))
 tree4 = proj₁ (proj₂ (insert tree3 1 {p = -∞<n} {q = n<+∞}))
 tree5 = proj₁ (proj₂ (insert tree4 2 {p = -∞<n} {q = n<+∞}))
 tree6 = proj₁ (proj₂ (insert tree5 3 {p = -∞<n} {q = n<+∞}))
-    
+     
