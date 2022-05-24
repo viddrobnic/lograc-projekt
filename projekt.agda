@@ -2,10 +2,11 @@ open import Relation.Binary
 open import Data.Nat using (ℕ; zero; suc; _⊔_) renaming (_<_ to _<ℕ_)
 open import Data.Nat.Properties using () renaming (<-isStrictTotalOrder to <ℕ-isStrictTotalOrder)
 open import Relation.Binary.PropositionalEquality
-open import Level using (0ℓ)
+open import Level using (0ℓ; Level)
 open import Data.Product
 open import Data.Bool.Base using (if_then_else_; false; true; Bool)
 open import Data.Empty using (⊥-elim; ⊥)
+open import Relation.Nullary using (¬_)
 
 -- Add -∞ and ∞ to the set.
 -- Example: add -∞ and ∞ to ℕ.
@@ -72,6 +73,14 @@ orderedInfinity record { S = S₀ ; _<_ = _<₀_ ; strictTotalOrder = strictTota
     ... | tri≈ ¬a b ¬c = tri≈ (λ x → ¬a (set∞-< x)) (cong (λ x → [ x ]) b) λ x → ¬c (set∞-< x)
     ... | tri> ¬a ¬b c = tri> (λ x → ¬a (set∞-< x)) (λ x → ¬b (set∞-≡ x)) (m<n c)
   
+-- Simple lemma
+-- if [ a ] < [ b ], then [ a ] !≡ [ b ]
+<∞-not-equal : {A : OrderedSet} {[a] [b] : (OrderedSet.S (orderedInfinity A))} → (OrderedSet._<_ (orderedInfinity A)) [a] [b] → ¬ ([a] ≡ [b])
+<∞-not-equal {A} {[a]} {[b]} [a]<[b] with IsStrictTotalOrder.compare (OrderedSet.strictTotalOrder (orderedInfinity A)) [a] [b]
+... | tri< a ¬b ¬c = λ x → ¬b x
+... | tri≈ ¬a b ¬c = λ x → ¬a [a]<[b]
+... | tri> ¬a ¬b c = λ x → ¬b x
+
 -- Define type for 2-3 trees.
 data 2-3Tree (A : OrderedSet) : ℕ → (OrderedSet.S (orderedInfinity A)) → (OrderedSet.S (orderedInfinity A)) → Set where
   -- Empty node
@@ -94,7 +103,7 @@ data 2-3Tree (A : OrderedSet) : ℕ → (OrderedSet.S (orderedInfinity A)) → (
         → 2-3Tree A h min [ a ] → 2-3Tree A h [ a ] [ b ] → 2-3Tree A h [ b ] max
         → 2-3Tree A (suc h) min max
 
--- Search - is element in tree?
+-- Is element in tree?
 data _∈_ {A : OrderedSet} {min max : (OrderedSet.S (orderedInfinity A))} : {h : ℕ} → OrderedSet.S A → 2-3Tree A h min max → Set where
   -- Element is in this node
   here₂ : {h : ℕ} {a : OrderedSet.S A} {l : 2-3Tree A h min [ a ]} {r : 2-3Tree A h [ a ] max} 
@@ -109,7 +118,7 @@ data _∈_ {A : OrderedSet} {min max : (OrderedSet.S (orderedInfinity A))} : {h 
   
   -- Element is in left/right subtree
   left₂ : {h : ℕ} {a b : OrderedSet.S A} {l : 2-3Tree A h min [ b ]} {r : 2-3Tree A h [ b ] max} 
-    {p : min <∞ [ b ]} {q : [ b ] <∞ max} 
+    {p : min <∞ [ b ]} {q : [ b ] <∞ max}
     → a ∈ l
     → a ∈ 2Node b p q l r
   right₂ : {h : ℕ} {a b : OrderedSet.S A} {l : 2-3Tree A h min [ b ]} {r : 2-3Tree A h [ b ] max} 
@@ -130,6 +139,90 @@ data _∈_ {A : OrderedSet} {min max : (OrderedSet.S (orderedInfinity A))} : {h 
     {p : min <∞ [ b ]} {q : [ b ] <∞ [ c ]} {s : [ c ] <∞ max}
     → a ∈ r
     → a ∈ 3Node b c p q s l m r
+
+-- Lemmas about _∈_
+if-in-less-than-max : {A : OrderedSet} {min max : (OrderedSet.S (orderedInfinity A))} {h : ℕ} {a : OrderedSet.S A} {t : 2-3Tree A h min max}
+  → a ∈ t → OrderedSet._<_ (orderedInfinity A) [ a ] max
+if-in-less-than-max (here₂ {q = q}) = q
+if-in-less-than-max {A} (here₃-l {q = q} {s = s}) = IsStrictTotalOrder.trans (OrderedSet.strictTotalOrder (orderedInfinity A)) q s
+if-in-less-than-max {A} (here₃-r {s = s}) = s
+if-in-less-than-max {A} (left₂ {q = q} a∈t) = IsStrictTotalOrder.trans (OrderedSet.strictTotalOrder (orderedInfinity A)) (if-in-less-than-max a∈t) q 
+if-in-less-than-max {A} (right₂ a∈t) = if-in-less-than-max a∈t
+if-in-less-than-max {A} (left₃ {q = q} {s = s} a∈t) = IsStrictTotalOrder.trans (OrderedSet.strictTotalOrder (orderedInfinity A)) (if-in-less-than-max a∈t) (IsStrictTotalOrder.trans (OrderedSet.strictTotalOrder (orderedInfinity A)) q s)
+if-in-less-than-max {A} (middle₃ {s = s} a∈t) = IsStrictTotalOrder.trans (OrderedSet.strictTotalOrder (orderedInfinity A)) (if-in-less-than-max a∈t) s
+if-in-less-than-max {A} (right₃ a∈t) = if-in-less-than-max a∈t
+
+if-in-more-than-min : {A : OrderedSet} {min max : (OrderedSet.S (orderedInfinity A))} {h : ℕ} {a : OrderedSet.S A} {t : 2-3Tree A h min max}
+  → a ∈ t → OrderedSet._<_ (orderedInfinity A) min [ a ]
+if-in-more-than-min (here₂ {p = p}) = p
+if-in-more-than-min {A} (here₃-l {p = p}) = p
+if-in-more-than-min {A} (here₃-r {p = p} {q = q}) = IsStrictTotalOrder.trans (OrderedSet.strictTotalOrder (orderedInfinity A)) p q
+if-in-more-than-min {A} (left₂ a∈t) = if-in-more-than-min a∈t
+if-in-more-than-min {A} (right₂ {p = p} a∈t) = IsStrictTotalOrder.trans (OrderedSet.strictTotalOrder (orderedInfinity A)) p (if-in-more-than-min a∈t)
+if-in-more-than-min {A} (left₃ a∈t) = if-in-more-than-min a∈t
+if-in-more-than-min {A} (middle₃ {p = p} a∈t) = IsStrictTotalOrder.trans (OrderedSet.strictTotalOrder (orderedInfinity A)) p (if-in-more-than-min a∈t)
+if-in-more-than-min {A} (right₃ {p = p} {q = q} a∈t) = IsStrictTotalOrder.trans (OrderedSet.strictTotalOrder (orderedInfinity A)) ((IsStrictTotalOrder.trans (OrderedSet.strictTotalOrder (orderedInfinity A)) p q)) (if-in-more-than-min a∈t)
+
+-- Search result - is element in a set or not
+data Dec {l : Level} (A : Set l) : Set l where
+  yes : A → Dec A
+  no  : (A → ⊥) → Dec A
+
+-- Lemmas for search
+not-in-if-not-in-left : {A : OrderedSet} {min max : (OrderedSet.S (orderedInfinity A))} {h : ℕ} {a b : OrderedSet.S A} {l : 2-3Tree A h min [ b ]} {r : 2-3Tree A h [ b ] max} {p : min <∞ [ b ]} {q : [ b ] <∞ max}
+  → (OrderedSet._<_ (orderedInfinity A)) [ a ] [ b ]
+  → (a ∈ l → ⊥)
+  → (a ∈ 2Node b p q l r → ⊥)
+not-in-if-not-in-left {A} [a]<[b] a∉l here₂ = <∞-not-equal {A = A} [a]<[b] refl
+not-in-if-not-in-left {A} [a]<[b] a∉l (left₂ a∈l) = a∉l a∈l
+not-in-if-not-in-left {A} {a = a} {b = b} [a]<[b] a∉l (right₂ a∈r) with IsStrictTotalOrder.compare (OrderedSet.strictTotalOrder (orderedInfinity A)) [ a ] [ b ]
+... | tri< x ¬y ¬z = ¬z (if-in-more-than-min a∈r)
+... | tri≈ ¬x y ¬z = ¬z (if-in-more-than-min a∈r)
+... | tri> ¬x ¬y z = ¬x [a]<[b]
+
+not-in-if-not-in-right : {A : OrderedSet} {min max : (OrderedSet.S (orderedInfinity A))} {h : ℕ} {a b : OrderedSet.S A} {l : 2-3Tree A h min [ b ]} {r : 2-3Tree A h [ b ] max} {p : min <∞ [ b ]} {q : [ b ] <∞ max}
+  → (OrderedSet._<_ (orderedInfinity A)) [ b ] [ a ]
+  → (a ∈ r → ⊥)
+  → (a ∈ 2Node b p q l r → ⊥)
+not-in-if-not-in-right {A} [b]<[a] a∉r here₂ = <∞-not-equal {A = A} [b]<[a] refl
+not-in-if-not-in-right {A} {a = a} {b = b} [b]<[a] a∉r (left₂ a∈l) with IsStrictTotalOrder.compare (OrderedSet.strictTotalOrder (orderedInfinity A)) [ a ] [ b ]
+... | tri< x ¬y ¬z = ¬z [b]<[a]
+... | tri≈ ¬x y ¬z = ¬x (if-in-less-than-max a∈l)
+... | tri> ¬x ¬y z = ¬x (if-in-less-than-max a∈l)
+not-in-if-not-in-right {A} [b]<[a] a∉r (right₂ a∈r) = a∉r a∈r
+
+-- Search for element
+-- Returns true if element is in tree, false otherwise.
+search : {A : OrderedSet} {min max : (OrderedSet.S (orderedInfinity A))} {h : ℕ} → (t : 2-3Tree A h min max) → (a : OrderedSet.S A) → Dec (a ∈ t)
+
+-- Search in empty tree
+search (Empty _ _ x) a = no (λ ())
+
+-- Search in 2Node
+search {A} (2Node b p q l r) a with IsStrictTotalOrder.compare (OrderedSet.strictTotalOrder (orderedInfinity A)) [ a ] [ b ]
+search {A} (2Node b p q l r) .b | tri≈ ¬x refl ¬z = yes here₂
+search {A} (2Node b p q l r) a | tri< x ¬y ¬z with search l a
+... | yes u = yes (left₂ u)
+... | no u = no (not-in-if-not-in-left x u)
+search {A} (2Node b p q l r) a | tri> ¬x ¬y z with search r a
+... | yes u = yes (right₂ u)
+... | no u = no (not-in-if-not-in-right z u)
+
+-- Search in 3Node
+search {A} (3Node b c p q s l m r) a with IsStrictTotalOrder.compare (OrderedSet.strictTotalOrder (orderedInfinity A)) [ a ] [ b ]
+search {A} (3Node b c p q s l m r) .b | tri≈ ¬x refl ¬z = yes here₃-l
+search {A} (3Node b c p q s l m r) a | tri< x ¬y ¬z with search l a 
+... | yes u = yes (left₃ u)
+... | no u = no {!   !}
+search {A} (3Node b c p q s l m r) a | tri> ¬x ¬y z with IsStrictTotalOrder.compare (OrderedSet.strictTotalOrder (orderedInfinity A)) [ a ] [ c ]
+search {A} (3Node b .a p q s l m r) a | tri> ¬x ¬y z | tri≈ ¬x' refl ¬z' = yes here₃-r
+search {A} (3Node b c p q s l m r) a | tri> ¬x ¬y z | tri< x' ¬y' ¬z' with search m a
+... | yes u = yes (middle₃ u)
+... | no u = no {!   !}
+search {A} (3Node b c p q s l m r) a | tri> ¬x ¬y z | tri> ¬x' ¬y' z' with search r a
+... | yes u = yes (right₃ u)
+... | no u = no {!   !}
+
 
 data InsertWitness {A : OrderedSet} {min max : (OrderedSet.S (orderedInfinity A))} : {h : ℕ} → (b : Bool) → 2-3Tree A h min max → Set where
   -- w-Empty : {b : Bool} {p : min <∞ max} → InsertWitness b (Empty min max p)
@@ -304,3 +397,4 @@ tree3 = proj₁ (proj₂ (insert tree2 5 {p = -∞<n} {q = n<+∞}))
 tree4 = proj₁ (proj₂ (insert tree3 1 {p = -∞<n} {q = n<+∞}))
 tree5 = proj₁ (proj₂ (insert tree4 2 {p = -∞<n} {q = n<+∞}))
 tree6 = proj₁ (proj₂ (insert tree5 3 {p = -∞<n} {q = n<+∞}))
+    
