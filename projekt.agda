@@ -72,7 +72,7 @@ orderedInfinity record { S = S₀ ; _<_ = _<₀_ ; strictTotalOrder = strictTota
     ... | tri< a ¬b ¬c = tri< (m<n a) (λ x → ¬b (set∞-≡ x)) λ {x → ¬c (set∞-< x)}
     ... | tri≈ ¬a b ¬c = tri≈ (λ x → ¬a (set∞-< x)) (cong (λ x → [ x ]) b) λ x → ¬c (set∞-< x)
     ... | tri> ¬a ¬b c = tri> (λ x → ¬a (set∞-< x)) (λ x → ¬b (set∞-≡ x)) (m<n c)
-  
+
 -- Simple lemma
 -- if [ a ] < [ b ], then [ a ] !≡ [ b ]
 <∞-not-equal : {A : OrderedSet} {[a] [b] : (OrderedSet.S (orderedInfinity A))} → (OrderedSet._<_ (orderedInfinity A)) [a] [b] → ¬ ([a] ≡ [b])
@@ -362,16 +362,36 @@ insert {A} (3Node b c p' q' s' l m r) a {p} {q} | tri> ¬x ¬y z | tri> ¬x' ¬y
   (2Node d p'' q'' l' r'), w-2Node
 ... | true , 3Node d e p'' q'' s'' l' m' r' , ()
 
-aInTreeAfterInsert : {A : OrderedSet} {h : ℕ} {min max : (OrderedSet.S (orderedInfinity A))}
-  → (t : 2-3Tree A h min max) → (a : OrderedSet.S A)
+-- No element is an element of an empty tree.
+a∉Empty : {A : OrderedSet}
+  {min max : (OrderedSet.S (orderedInfinity A))} {p : OrderedSet._<_ (orderedInfinity A) min max}
+  {a : OrderedSet.S A}
+  → _∈_ {A = A} a (Empty min max p)  → ⊥
+
+a∉Empty {a = a} ()
+
+-- lemma after insertion of a a should be in tree.
+after-insert-a∈t : {A : OrderedSet} {h : ℕ} {min max : (OrderedSet.S (orderedInfinity A))}
+  → (t : 2-3Tree A h min max)
+  → (a : OrderedSet.S A)
   → {p : (OrderedSet._<_ (orderedInfinity A)) min [ a ]} {q : (OrderedSet._<_ (orderedInfinity A)) [ a ] max}
   → a ∈ (proj₁ (proj₂ (insert t a {p} {q})))
-aInTreeAfterInsert t a {p} {q} with (proj₁ (proj₂ (insert t a {p} {q})))
-... | t' = {! t' !}
 
--- TODO lemma after insertion of a a should be in tree.
--- TODO search which returns true or false
--- TODO if you have two proofs a ∈ t, then the proofs are the same.
+after-insert-a∈t {A} t a {p} {q} with insert t a {p} {q}
+after-insert-a∈t {A} t a {p} {q} | false , t' , w with search t' a
+after-insert-a∈t {A} t a {p} {q} | false , 2Node b p' q' l r , w | yes u = u
+after-insert-a∈t {A} t a {p} {q} | false , 2Node b p' q' l r , w | no u with search l a | search r a
+... | yes u | _ = left₂ u
+... | no u | yes u' = right₂ u'
+... | no u | no u' with IsStrictTotalOrder.compare (OrderedSet.strictTotalOrder (orderedInfinity A)) [ a ] [ b ]
+... | tri< x ¬y ¬z = ⊥-elim (u {! !})
+... | tri≈ ¬x refl ¬z = here₂ {a = b} {l = l} {r = r} {p = p'} {q = q'}
+... | tri> ¬x ¬y z = {!   !}
+after-insert-a∈t {A} t a {p} {q} | false , 3Node b c p' q' s' l r m , w | yes u = u
+after-insert-a∈t {A} t a {p} {q} | false , 3Node b c p' q' s' l r m , w | no u = {!   !}
+after-insert-a∈t {A} t a {p} {q} | true , 2Node b p' q' l r , w with search (2Node b p' q' l r) a
+after-insert-a∈t {A} t a {p} {q} | true , 2Node b p' q' l r , w | yes u = u
+after-insert-a∈t {A} t a {p} {q} | true , 2Node b p' q' l r , w | no u = {!   !}
 
 -- EXAMPLE:
 -- Natural number are ordered set
@@ -462,4 +482,4 @@ tree3 = proj₁ (proj₂ (insert tree2 5 {p = -∞<n} {q = n<+∞}))
 tree4 = proj₁ (proj₂ (insert tree3 1 {p = -∞<n} {q = n<+∞}))
 tree5 = proj₁ (proj₂ (insert tree4 2 {p = -∞<n} {q = n<+∞}))
 tree6 = proj₁ (proj₂ (insert tree5 3 {p = -∞<n} {q = n<+∞}))
-     
+        
