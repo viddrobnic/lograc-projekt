@@ -46,20 +46,38 @@ TODO slikce / risanje po tabli
 
 # Search
 
-- ∈
-- search function
+- Relation $a \in t$
 
 ![bg right:60%](element.png)
 
 ---
 
+<style>
+  :root {
+    --color-background: #eee;
+    --color-foreground: #1e1e1e;
+    --color-highlight: #027acc;
+    --color-dimmed: #1e1e1e;
+  }
+</style>
+
 # Search
+
+- Relation $a \in t$
+- Decidable type
+- Search function
+- Lemmas to eliminate impossible cases
 
 ![bg right:60%](search.png)
 
 ---
 
 # Insert
+
+- Proofs that $a$ lies between bounds
+- Height of the tree can increase
+- Defined recursively
+- Some cases cannot happen
 
 ![bg left:60%](insert.png)
 
