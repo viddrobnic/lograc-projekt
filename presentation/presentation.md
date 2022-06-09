@@ -25,7 +25,8 @@ Vid Drobnič, Matej Marinko
 
 # 2-3 Trees
 
-TODO slikce / risanje po tabli
+TODO: @Matej bo tole centriru, ker je CSS master.
+![](2node.svg) ![](3node.svg)
 
 ---
 
