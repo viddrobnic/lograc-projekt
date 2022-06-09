@@ -17,7 +17,7 @@ backgroundColor: #fff
 
 <!-- _class: lead -->
 
-# 2–3 trees
+# 2–3 Trees
 
 Vid Drobnič, Matej Marinko
 
