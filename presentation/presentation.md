@@ -25,21 +25,23 @@ Vid Drobnič, Matej Marinko
 
 # 2-3 Trees
 
-TODO: @Matej bo tole centriru, ker je CSS master.
-![](2node.svg) ![](3node.svg)
+![bg h:45%](2node.svg)
+![bg h:45%](3node.svg)
 
 ---
 
 # 2-3 Trees
 
-- INF set
-- TODO dokazi so zraven
+- Defined recursively
+- Intrinsic properties
 
 ![bg left:60%](2-3tree.png)
 
 ---
 
-# 2-3 Trees
+# Example
+
+- A lot of Agda boilerplate
 
 ![bg left:60%](example.png)
 
