@@ -1,3 +1,5 @@
+module OrderedSet where
+
 open import Relation.Binary
 open import Level using (0ℓ; Level)
 open import Relation.Binary.PropositionalEquality
