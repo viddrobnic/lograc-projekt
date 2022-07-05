@@ -1,6 +1,5 @@
 open import OrderedSet using (OrderedSet)
 
-
 module 23Tree (A : OrderedSet) where
 
 open import OrderedSet using (OrderedSet; orderedInfinity; [_])

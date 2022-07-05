@@ -70,10 +70,16 @@ orderedInfinity record { S = S₀ ; _<_ = _<₀_ ; strictTotalOrder = strictTota
     ... | tri≈ ¬a b ¬c = tri≈ (λ x → ¬a (set∞-< x)) (cong (λ x → [ x ]) b) λ x → ¬c (set∞-< x)
     ... | tri> ¬a ¬b c = tri> (λ x → ¬a (set∞-< x)) (λ x → ¬b (set∞-≡ x)) (m<n c)
 
--- Simple lemma
--- if [ a ] < [ b ], then [ a ] !≡ [ b ]
-<∞-not-equal : {A : OrderedSet} {[a] [b] : (OrderedSet.S (orderedInfinity A))} → (OrderedSet._<_ (orderedInfinity A)) [a] [b] → ¬ ([a] ≡ [b])
-<∞-not-equal {A} {[a]} {[b]} [a]<[b] with IsStrictTotalOrder.compare (OrderedSet.strictTotalOrder (orderedInfinity A)) [a] [b]
-... | tri< a ¬b ¬c = λ x → ¬b x
-... | tri≈ ¬a b ¬c = λ x → ¬a [a]<[b]
-... | tri> ¬a ¬b c = λ x → ¬b x
+
+module _ (A : OrderedSet) where
+  A∞ = orderedInfinity A
+  open OrderedSet A∞ renaming (S to S∞; _<_ to _<A∞_; strictTotalOrder to strictTotalOrder∞)
+  open IsStrictTotalOrder strictTotalOrder∞ renaming (compare to <∞-compare)
+
+  -- Simple lemma
+  -- if [ a ] < [ b ], then [ a ] !≡ [ b ]
+  <∞-not-equal : {[a] [b] : S∞} → [a] <A∞ [b] → ¬ ([a] ≡ [b])
+  <∞-not-equal {[a]} {[b]} [a]<[b] with <∞-compare [a] [b]
+  ... | tri< a ¬b ¬c = λ x → ¬b x
+  ... | tri≈ ¬a b ¬c = λ x → ¬a [a]<[b]
+  ... | tri> ¬a ¬b c = λ x → ¬b x
