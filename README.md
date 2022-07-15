@@ -13,4 +13,4 @@ This repo contains the code for the student project at the LOGRAC course. It con
 - [X] Write a function search which returns weather an element is in a tree. If an element is in a tree, a proof of that is given with the help of `∈`.
 - [X] Write an insert function.
 - [X] Prove that an element is in the tree after it was inserted.
-- [ ] Reorganize code using Agda modules.
+- [X] Reorganize code using Agda modules.

@@ -1,13 +1,11 @@
-open import Data.Nat using (ℕ; zero; suc; _⊔_) renaming (_<_ to _<ℕ_)
-open import Data.Nat.Properties using () renaming (<-isStrictTotalOrder to <ℕ-isStrictTotalOrder)
-open import Data.Product
-open import OrderedSet
-open import 23Tree
-open import Search
-open import Insert
+module Examples where
 
--- EXAMPLE:
--- Natural number are ordered set
+open import Data.Nat using (ℕ; zero; suc; _⊔_; s≤s; z≤n) renaming (_<_ to _<ℕ_)
+open import Data.Nat.Properties using () renaming (<-isStrictTotalOrder to <ℕ-isStrictTotalOrder)
+open import OrderedSet
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; cong; subst; resp)
+
+-- Natural numbers as ordered set
 orderedℕ : OrderedSet
 orderedℕ = record { 
   S = ℕ ; 
@@ -15,84 +13,36 @@ orderedℕ = record {
   strictTotalOrder = <ℕ-isStrictTotalOrder 
   }
 
-orderedℕ∞ = OrderedSet.S (orderedInfinity orderedℕ)
+open import Search orderedℕ using (_∈_; Dec)
+open _∈_
+open import Tree orderedℕ
 
--- Empty
-emptyTree1 : 2-3Tree orderedℕ 0 -∞ +∞
-emptyTree1 = Empty -∞ +∞ -∞<+∞
+-- Empty tree
+emptyTree = empty
 
--- Example 2-3 tree.
-sampleTree : 2-3Tree orderedℕ 1 -∞ +∞
-sampleTree = 2Node 1 -∞<n n<+∞ (Empty -∞ [ 1 ] -∞<n) (Empty [ 1 ] +∞ n<+∞)
+-- Singleton tree with 5
+singletonTree = singleton 5
 
-sampleTree2 : 2-3Tree orderedℕ 1 -∞ +∞
-sampleTree2 = 3Node 1 2 -∞<n (m<n (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n))) n<+∞ (Empty -∞ [ 1 ] -∞<n) (Empty [ 1 ] [ 2 ] (m<n (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n)))) (Empty [ 2 ] +∞ n<+∞)
+-- Insert 5 into empty tree
+insert-5 : insert emptyTree 5 ≡ singletonTree
+insert-5 = refl 
 
-sampleTree3 : 2-3Tree orderedℕ 2 -∞ +∞
-sampleTree3 = 2Node 3 -∞<n n<+∞ 
-  (3Node 1 2 -∞<n 
-    (m<n (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n))) 
-    (m<n (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n)))) 
-    (Empty -∞ [ 1 ] -∞<n) 
-    (Empty [ 1 ] [ 2 ] (m<n (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n)))) 
-    (Empty [ 2 ] [ 3 ] (m<n (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n)))))) 
-  (2Node 4 
-    (m<n (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n))))) 
-    n<+∞ 
-    (Empty [ 3 ] [ 4 ] (m<n (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n)))))) 
-    (Empty [ 4 ] +∞ n<+∞))
+-- Tree with 4 elements.
+tree : Tree
+tree = insert (insert (insert (insert empty 42) 69) 3) 1
 
-sampleTree4 : 2-3Tree orderedℕ 2 -∞ +∞
-sampleTree4 = 3Node 2 4 -∞<n 
-  (m<n (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n)))) 
-  n<+∞ 
-  (2Node 1 -∞<n 
-    (m<n (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n))) 
-    (Empty -∞ [ 1 ] -∞<n) 
-    (Empty [ 1 ] [ 2 ] (m<n (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n))))) 
-  (2Node 3 
-    (m<n (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n)))) 
-    (m<n (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n))))) 
-    (Empty [ 2 ] [ 3 ] (m<n (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n))))) 
-    (Empty [ 3 ] [ 4 ] (m<n (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n))))))) 
-  (2Node 5 
-    (m<n (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n)))))) 
-    n<+∞ 
-    (Empty [ 4 ] [ 5 ] (m<n (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s (Data.Nat.s≤s Data.Nat.z≤n))))))) 
-    (Empty [ 5 ] +∞ n<+∞))
+-- Check that 1 is in tree
+1-in-tree : search tree 1 ≡ Dec.yes (left₂ here₃-l)
+1-in-tree = refl
 
-1-in-sampleTree : 1 ∈ sampleTree
-1-in-sampleTree = here₂
+-- Check that 42 is in tree
+42-in-tree : search tree 42 ≡ Dec.yes here₂
+42-in-tree = refl
 
-1-in-sampleTree2 : 1 ∈ sampleTree2
-1-in-sampleTree2 = here₃-l
-
-2-in-sampleTree2 : 2 ∈ sampleTree2
-2-in-sampleTree2 = here₃-r
-
-1-in-sampleTree3 : 1 ∈ sampleTree3
-1-in-sampleTree3 = left₂ here₃-l
-
-4-in-sampleTree3 : 4 ∈ sampleTree3
-4-in-sampleTree3 = right₂ here₂
-
-1-in-sampleTree4 : 1 ∈ sampleTree4
-1-in-sampleTree4 = left₃ here₂
-
-3-in-sampleTree4 : 3 ∈ sampleTree4
-3-in-sampleTree4 = middle₃ here₂
-
-5-in-sampleTree4 : 5 ∈ sampleTree4
-5-in-sampleTree4 = right₃ here₂
-
--- Insertion example
-tree0 : 2-3Tree orderedℕ 0 -∞ +∞
-tree0 = Empty -∞ +∞ -∞<+∞
-
-tree1 = proj₁ (proj₂ (insert tree0 5 {p = -∞<n} {q = n<+∞}))
-tree2 = proj₁ (proj₂ (insert tree1 10 {p = -∞<n} {q = n<+∞}))
-tree3 = proj₁ (proj₂ (insert tree2 5 {p = -∞<n} {q = n<+∞}))
-tree4 = proj₁ (proj₂ (insert tree3 1 {p = -∞<n} {q = n<+∞}))
-tree5 = proj₁ (proj₂ (insert tree4 2 {p = -∞<n} {q = n<+∞}))
-tree6 = proj₁ (proj₂ (insert tree5 3 {p = -∞<n} {q = n<+∞}))
-        
+-- Check that 2 is not in tree
+2-not-in-tree : search tree 2 ≡ (Dec.no λ { (left₂ (left₃ ()))
+                                          ; (left₂ (middle₃ ()))
+                                          ; (left₂ (right₃ ())) 
+                                          ; (right₂ (left₂ ()))                        
+                                          ; (right₂ (right₂ ())) })
+2-not-in-tree = refl
